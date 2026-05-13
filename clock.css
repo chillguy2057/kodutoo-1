@@ -1,29 +1,226 @@
-body{
-    margin:0;
-    padding:0;
-    background-color: black;
-    font-size: 30px;
-    color:white;
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #0a0a1a;
+    color: white;
+    font-family: 'Orbitron', monospace;
+    height: 100vh;
+    overflow: hidden;
+    cursor: crosshair;
+    transition: background-color 0.5s ease;
 }
 
-#container{
+/* tähtede canvas kõige taga */
+#stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* CRT skaneerimisjooned */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.04) 2px,
+            rgba(0, 0, 0, 0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* modal mis küsib lemmikvärvi */
+#colorModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
-    flex-direction: column;
-    height: 90vh;
+    justify-content: center;
     align-items: center;
-    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(6px);
 }
 
-#clockContainer, #dateContainer{
-    display: flex;
-    justify-content: center;
-    font-size: 25px;
+#modalBox {
+    background: #0d0d2b;
+    border: 2px solid #00d4ff;
+    border-radius: 16px;
+    padding: 2.5em 3em;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+    max-width: 380px;
+    width: 90%;
 }
 
-button{
-    font-size: 1.1em;
+#modalBox h2 {
+    font-size: 1.8em;
+    color: #00d4ff;
+    margin-bottom: 0.3em;
+    letter-spacing: 0.1em;
+}
+
+#modalBox p {
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85em;
+    margin-bottom: 1.5em;
+    line-height: 1.6;
+}
+
+#modalBox input[type="color"] {
+    width: 75px;
+    height: 75px;
+    border: 3px solid #00d4ff;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+    padding: 4px;
+    display: block;
+    margin: 0 auto 1.5em;
+}
+
+#modalBox button {
+    background: #00d4ff;
+    color: #000;
+    border: none;
+    padding: 0.7em 2.5em;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    font-size: 0.9em;
+    letter-spacing: 0.1em;
+    /* override button defaults allpool */
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+}
+
+#modalBox button:hover {
+    opacity: 0.8;
+}
+
+/* vasak ülanurk */
+#helpOverlay {
+    position: fixed;
+    top: 18px;
+    left: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(9px, 0.85vw, 13px);
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 2;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* parem ülanurk */
+#authorInfo {
+    position: fixed;
+    top: 18px;
+    right: 20px;
+    text-align: right;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(10px, 0.9vw, 13px);
+    color: rgba(255, 255, 255, 0.4);
+    z-index: 10;
+    line-height: 1.8;
+}
+
+#authorInfo strong {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+#authorInfo a {
+    color: #00d4ff;
+    text-decoration: none;
+    display: block;
+}
+
+/* kell keskel - liigub nooleklahvidega */
+#clockWrapper {
+    position: absolute;
+    z-index: 5;
+}
+
+/* glassmorphism paneel - nagu ekraanipildil */
+#clockPanel {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    padding: 0px;
-    height: 40px;
-    width: 40px;
+    padding: 1.5em 2.5em;
+    box-shadow: 0 0 50px rgba(0, 212, 255, 0.1), inset 0 0 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease;
+}
+
+#clockPanel:hover {
+    box-shadow: 0 0 70px rgba(0, 212, 255, 0.2), inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+/* suur kellaaeg */
+#clockContainer {
+    display: block;
+    font-size: 15vw;
+    font-weight: 900;
+    color: #00d4ff;
+    text-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    transition: color 0.4s ease, text-shadow 0.4s ease,
+    font-size 0.3s ease, font-family 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* kuupäev alla */
+#dateContainer {
+    display: block;
+    font-size: 2vw;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 0.5em;
+    transition: font-family 0.3s ease;
+}
+
+/* nupud allservas */
+#buttonContainer {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    z-index: 10;
+}
+
+button {
+    background: rgba(0, 0, 0, 0.5);
+    color: #00d4ff;
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    padding: 7px 16px;
+    height: 36px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(9px, 0.8vw, 12px);
+    letter-spacing: 0.05em;
+    transition: background 0.2s, border-color 0.2s;
+    backdrop-filter: blur(6px);
+    white-space: nowrap;
+    width: auto;
+}
+
+button:hover {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: #00d4ff;
 }
